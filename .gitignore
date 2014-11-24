@@ -1,0 +1,11 @@
+*.log
+.cache
+.idea
+.lib/
+dist/*
+target/
+lib_managed/
+project/boot/
+project/plugins/project/
+.scala_dependencies
+.worksheet
