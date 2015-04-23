@@ -18,7 +18,7 @@ trait CoffeeScriptCompiler {
     }
   }
 
-  final def compile(script: String): String = {
+  final def compileScript(script: String): String = {
     coffeeScript // Init
     context.setAttribute("_cfscriptsrc", script, ScriptContext.ENGINE_SCOPE)
     try {

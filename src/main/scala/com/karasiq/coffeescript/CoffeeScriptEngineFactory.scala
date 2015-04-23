@@ -6,26 +6,71 @@ import javax.script._
 
 import scala.language.postfixOps
 
-private sealed abstract class CoffeeScriptEngine extends AbstractScriptEngine with CoffeeScriptCompiler {
+private sealed abstract class CoffeeScriptEngine extends AbstractScriptEngine with CoffeeScriptCompiler with Invocable with Compilable {
   private val engineManager = new ScriptEngineManager()
 
   override val javaScriptEngine: ScriptEngine = engineManager.getEngineByName("javascript")
 
   override def eval(script: String, context: ScriptContext): AnyRef = {
-    javaScriptEngine.eval(compile(script), context)
+    javaScriptEngine.eval(compileScript(script), context)
+  }
+
+  private def readerToString(reader: Reader): String = {
+    val bufferedReader = new BufferedReader(reader)
+    Iterator.continually(bufferedReader.readLine()).takeWhile(null ne)
+      .foldLeft(StringBuilder.newBuilder)((builder, string) ⇒ builder.append(string))
+      .result()
   }
 
   override def eval(reader: Reader, context: ScriptContext): AnyRef = {
-    val bufferedReader = new BufferedReader(reader)
-    val script = Iterator.continually(bufferedReader.readLine()).takeWhile(null ne)
-      .foldLeft(StringBuilder.newBuilder)((builder, string) ⇒ builder.append(string))
-      .result()
-    eval(script, context)
+    this.eval(readerToString(reader), context)
   }
 
   override def getFactory: ScriptEngineFactory
 
   override def createBindings(): Bindings = new SimpleBindings()
+
+  private def asInvocable[T](f: Invocable ⇒ T): T = {
+    javaScriptEngine match {
+      case i: Invocable ⇒
+        f(i)
+
+      case _ ⇒
+        throw new IllegalArgumentException("Not invocable")
+    }
+  }
+
+  override def invokeMethod(thiz: scala.Any, name: String, args: AnyRef*): AnyRef = {
+    asInvocable[AnyRef](_.invokeMethod(thiz, name, args:_*))
+  }
+
+  override def invokeFunction(name: String, args: AnyRef*): AnyRef = {
+    asInvocable[AnyRef](_.invokeFunction(name, args:_*))
+  }
+
+  override def getInterface[T](clasz: Class[T]): T = {
+    asInvocable[T](_.getInterface(clasz))
+  }
+
+  override def getInterface[T](thiz: scala.Any, clasz: Class[T]): T = {
+    asInvocable[T](_.getInterface(thiz, clasz))
+  }
+
+  override def compile(script: Reader): CompiledScript = compile(readerToString(script))
+
+  override def compile(script: String): CompiledScript = javaScriptEngine match {
+    case c: Compilable ⇒
+      c.compile(compileScript(script))
+
+    case _ ⇒
+      new CompiledScript {
+        lazy val cached = compileScript(script)
+
+        override def eval(context: ScriptContext): AnyRef = javaScriptEngine.eval(cached, context)
+
+        override def getEngine: ScriptEngine = javaScriptEngine
+      }
+  }
 }
 
 final class CoffeeScriptEngineFactory extends ScriptEngineFactory {
