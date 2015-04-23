@@ -100,7 +100,7 @@ final class CoffeeScriptEngineFactory extends ScriptEngineFactory {
 
   override def getEngineVersion: String = "1.0"
 
-  override def getLanguageVersion: String = "1.8.0"
+  override def getLanguageVersion: String = "1.9.2"
 
   override def getExtensions: util.List[String] = Vector("coffee")
 
