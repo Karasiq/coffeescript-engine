@@ -1,32 +1,30 @@
 package com.karasiq.coffeescript
 
 import java.io.InputStreamReader
-import javax.script.{ScriptContext, ScriptEngine, SimpleScriptContext}
+import javax.script._
+
+import com.karasiq.coffeescript.ScriptUtils._
+
+import scala.util.control.Exception
 
 trait CoffeeScriptCompiler {
-  protected def javaScriptEngine: ScriptEngine
+  def compile(script: String): String
+}
 
-  private val context = new SimpleScriptContext // Compiler context
-
-  private lazy val coffeeScript = {
+object CoffeeScriptCompiler {
+  def apply(javaScriptEngine: ScriptEngine): CoffeeScriptCompiler = {
     val classLoader = Thread.currentThread().getContextClassLoader
     val reader = new InputStreamReader(classLoader.getResourceAsStream("coffee-script.js"))
-    try {
-      javaScriptEngine.eval(reader, context)
-    } finally {
-      reader.close()
-    }
-  }
+    Exception.allCatch.andFinally(reader.close()) {
+      javaScriptEngine.withContext(new SimpleScriptContext) { engine ⇒
+        engine.eval(reader)
+        engine match {
+          case i: Invocable ⇒
+            i.getInterface(javaScriptEngine.eval("CoffeeScript"), classOf[CoffeeScriptCompiler])
 
-  final def compileScript(script: String): String = {
-    coffeeScript // Init
-    context.setAttribute("_cfscriptsrc", script, ScriptContext.ENGINE_SCOPE)
-    try {
-      val call = javaScriptEngine.getFactory.getMethodCallSyntax("CoffeeScript", "compile", "_cfscriptsrc")
-      val result = javaScriptEngine.eval(call, context)
-      result match { case s: String ⇒ s }
-    } finally {
-      context.removeAttribute("_cfscriptsrc", ScriptContext.ENGINE_SCOPE)
+          case _ ⇒ throw new IllegalArgumentException("Cannot create compiler")
+        }
+      }
     }
   }
 }

@@ -6,20 +6,20 @@ import javax.script._
 
 import scala.language.postfixOps
 
-private sealed abstract class CoffeeScriptEngine extends AbstractScriptEngine with CoffeeScriptCompiler with Invocable with Compilable {
+private sealed abstract class CoffeeScriptEngine extends AbstractScriptEngine with Invocable with Compilable {
   private val engineManager = new ScriptEngineManager()
 
-  override val javaScriptEngine: ScriptEngine = engineManager.getEngineByName("javascript")
+  private val javaScriptEngine: ScriptEngine = engineManager.getEngineByName("javascript")
+
+  private lazy val compiler = CoffeeScriptCompiler(javaScriptEngine)
 
   override def eval(script: String, context: ScriptContext): AnyRef = {
-    javaScriptEngine.eval(compileScript(script), context)
+    javaScriptEngine.eval(compiler.compile(script), context)
   }
 
   private def readerToString(reader: Reader): String = {
     val bufferedReader = new BufferedReader(reader)
-    Iterator.continually(bufferedReader.readLine()).takeWhile(null ne)
-      .foldLeft(StringBuilder.newBuilder)((builder, string) ⇒ builder.append(string))
-      .result()
+    Iterator.continually(bufferedReader.readLine()).takeWhile(null ne).mkString("\r\n")
   }
 
   override def eval(reader: Reader, context: ScriptContext): AnyRef = {
@@ -60,11 +60,11 @@ private sealed abstract class CoffeeScriptEngine extends AbstractScriptEngine wi
 
   override def compile(script: String): CompiledScript = javaScriptEngine match {
     case c: Compilable ⇒
-      c.compile(compileScript(script))
+      c.compile(compiler.compile(script))
 
     case _ ⇒
       new CompiledScript {
-        lazy val cached = compileScript(script)
+        lazy val cached = compiler.compile(script)
 
         override def eval(context: ScriptContext): AnyRef = javaScriptEngine.eval(cached, context)
 
