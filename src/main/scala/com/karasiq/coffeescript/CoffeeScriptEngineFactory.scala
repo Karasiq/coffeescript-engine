@@ -84,6 +84,7 @@ final class CoffeeScriptEngineFactory extends ScriptEngineFactory {
     case ScriptEngine.NAME ⇒ getNames.head
     case ScriptEngine.LANGUAGE ⇒ getLanguageName
     case ScriptEngine.LANGUAGE_VERSION ⇒ getLanguageVersion
+    case _ ⇒ null
   }
 
   override def getProgram(statements: String*): String = statements.mkString("\n")
@@ -100,7 +101,7 @@ final class CoffeeScriptEngineFactory extends ScriptEngineFactory {
 
   override def getEngineVersion: String = "1.0"
 
-  override def getLanguageVersion: String = "1.9.2"
+  override def getLanguageVersion: String = "1.10.0"
 
   override def getExtensions: util.List[String] = Vector("coffee")
 
