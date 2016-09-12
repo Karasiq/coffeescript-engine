@@ -13,6 +13,24 @@ private sealed abstract class CoffeeScriptEngine extends AbstractScriptEngine wi
 
   private lazy val compiler = CoffeeScriptCompiler(javaScriptEngine)
 
+  override def setBindings(bindings: Bindings, scope: Int) = {
+    super.setBindings(bindings, scope)
+    javaScriptEngine.setBindings(bindings, scope)
+  }
+
+  override def getContext = {
+    javaScriptEngine.getContext
+  }
+
+  override def setContext(ctxt: ScriptContext) = {
+    super.setContext(ctxt)
+    javaScriptEngine.setContext(ctxt)
+  }
+
+  override def getBindings(scope: Int) = {
+    javaScriptEngine.getBindings(scope)
+  }
+
   override def eval(script: String, context: ScriptContext): AnyRef = {
     javaScriptEngine.eval(compiler.compile(script), context)
   }
@@ -25,8 +43,6 @@ private sealed abstract class CoffeeScriptEngine extends AbstractScriptEngine wi
   override def eval(reader: Reader, context: ScriptContext): AnyRef = {
     this.eval(readerToString(reader), context)
   }
-
-  override def getFactory: ScriptEngineFactory
 
   override def createBindings(): Bindings = new SimpleBindings()
 

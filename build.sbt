@@ -1,12 +1,14 @@
+
+
 name := "coffeescript"
 
 organization := "com.github.karasiq"
 
-version := "1.0"
+version := "1.0.1"
 
-isSnapshot := false
+isSnapshot := version.value.endsWith("SNAPSHOT")
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
 scalacOptions ++= Seq("-feature", "-optimize")
 
