@@ -1,19 +1,17 @@
-
-
 name := "coffeescript"
 
 organization := "com.github.karasiq"
 
-version := "1.0.1"
+version := "1.0.2"
 
 isSnapshot := version.value.endsWith("SNAPSHOT")
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.1"
 
-scalacOptions ++= Seq("-feature", "-optimize")
+crossScalaVersions := Seq("2.11.8", "2.12.1")
 
 libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+  "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 )
 
 publishMavenStyle := true
